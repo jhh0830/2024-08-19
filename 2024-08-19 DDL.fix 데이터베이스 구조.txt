@@ -1,0 +1,151 @@
+3. CHECK 제약조건
+    
+    컬럼에 기록될 수 있는 값에 대한 "조건식" 을 설정해줄 수있다.
+    
+    [ 표현법 ]
+    CHECK(조건식)
+
+--> CHECK 제약조건에 NULL 값도 존재 가능함!!
+-- 만약, NULL값을 못들어오게 막고 싶다면
+-- NOT NULL 도 같이 부여하면 됨!!
+
+--> CHECK 제약 조건 또한 위배되었을 때
+-- 제약조건명으로만 오류를 알려줌!!
+
+-- 잘못만든 테이블을 삭제하고싶다면?  >> DROP TABLE 테이블명;
+
+--> 회원가입일을 항상 STSDATE 값으로 받고 싶을 경우에는?
+
+
+/*
+    * 특정 컬럼에 들어올 값에 대한 "기본값" 지정 가능
+    DEFAULT 설정 (제약조건은 아님!!)
+*/
+
+
+
+MEM_DATE DATE DEFAULT SYSDATE NOT NULL (O) -- MEM_DATE DATE NOT NULL DEFAULT SYSDATE (X)
+--자료형 뒤에만 쓰고 제약조건뒤에는 사용 불가 서순 중요
+
+
+*데이터 삽입 시 일부 데이터만 지정해서 넣는 방법
+    INSERT INTO 테이블명(컬럼명1, 컬럼명2, 컬럼명3)
+                VALUES(값1,값2,값3);
+
+4. PRIMARY KEY (기본키) 제약조건
+    
+    테이블에서 각 행들의 정보를 "유일" 하게 "식별" 할 수 있는
+    컬럼에 부여하는 제약조건
+    각 행들을 구분할 수 있는 식별자의 역할
+    (HASHMAP 으로 따지면 KEY 같은 존재)
+    예) 회원번호, 주문번호, 사번, 학번, 예약번호, ....
+    
+    => 중복되지 않고 값이 존재해야만 하는 컬럼에
+        FRIMARY KEY 제약조건을 부여하는 것이 좋다!
+        (NOT NULL + UNIQUE 합친 느낌)
+    
+    => 단, 한 테이블 당 한개만 지정 가능!! (최소성)
+
+--> PRIMARY KEY 컬럼에 중복으로 인한 오류
+-- ORA-00001: unique constraint (DDL.MEM_PK) violated
+
+--> PRIMARY KEY 컬럼에 NULL 값으로 인한 오류
+-- ORA-01400: cannot insert NULL into ("DDL"."MEM_PRIMARYKEY1"."MEM_NO")
+
+--> PRIMARY KEY 가 한 테이블에 두개가 될 수 없다.
+-- ORA-02260: table can have only one primary key
+
+-- 단,  두개 이상의 컬럼을 "하나로" 묶어서 PRIMARY KEY
+-- 하나로 설정은 가능하다!! (복합키)
+
+5. FOREIGN KEY (외래키) 제약조건
+    
+    해당 컬럼에 다른 테이블에 존재하는 값이 들어와야 할 경우
+    그 컬럼에 부여하는 제약조건
+    
+    => 다른 테이블 (부모 테이블) 을 "참조" 한다 라고 표현
+    => 즉, 참조된 다른 테이블이 제공하고 있는
+    컬럼값만 들어갈 수 있다.
+    =>  FOREIGN KEY 제약조건으로 다른 테이블 간의 
+        "관계" 를 형성할 수 있음 (즉, JOIN 이 가능해짐)
+        
+        
+    예) KH 계정의
+    EMPLOYEE 테이블의 DEPT_CODE 컬럼에는 
+    'D1'~'D9' 까지의 값만 들어갈 수 있다.
+    'D1'~'D9' 까지의 값은
+    DEPARYMENT 테이블의 DEPT_ID 컬럼에 들어있음!!
+    
+    EMPLOYEE 테이블의 JOB_CODE 컬럼에는
+    'J1' ~ 'J7' 까지의 값만 들어갈 수 있다.
+    'J1' ~ 'J7' 까지의 값은
+    JOB 테이블의 JOB_CODE 컬럼에 들어있음!!
+    
+    
+** [ 표현법 ]
+   - 컬럼레벨방식
+    컬럼명 자료형 CONSTRAINT 제약조건명 REFERENCES 참조할부모테이블명(참조할컬럼명)
+    
+    - 테이블레벨방식
+    CONSTRAINT 제약조건명 FORIGN KEY(컬럼명) REFERENCES 참조할부모테이블명(참조할컬럼명)
+두 방식 모두 CONSTRAINT 제약조건명 생략가능!!
+    (생략 시  기본적으로 SYS_C~~~ 이렇게 제약조건명이 잡힘)
+
+ 두방식 모두 (참조할컬럼명)  생략 가능!!
+
+
+ * 자식 테이블 생성 시 (외래키 제약조건 부여 시)
+    부모데이터가 삭제되었을 때 자식데이터를 어떻게 처리할건지
+    "옵션" 으로 지정해놓을 수 있음!!
+    
+    * FOREIGN KEY 삭제 옵션
+    삭제 옵션을 별도로 제시하지 않으면
+    기본적으로 "ON DELETE RESTRICTED" 로 기본적으로 지정됨
+                (삭제 제한)
+    
+    1) ON DELETE SET NULL : 부모데이터 삭제시 해당 데이터를 사용하고 있는
+                            자식데이터를 모두 NULL로 변경시키는 옵션
+    2) ON DELETE CASCADE : 부모데이터 삭제 시 해당 데이터를 사용하고 있는
+                            자식데이터도 같이 삭제시키는 옵션
+
+
+-- 데이터 복구 명령어
+ROLLBACK;
+
+
+--> 외래키 제약조건이 걸린 컬럼은 부모테이블과 조인 시
+-- 연결고리 컬럼 역할을 한다!!
+
+-- 굳이 외래키 제약조건이 걸려있지 않더라도 JOIN 가능함!!
+-- 단, 두 컬럼에 동일한 의미의 데이터가 담겨있어야함!!
+-- 예) KH 계정의
+-- EMPLOYEE 테이블에 DEPT_CODE, JOB_CODE 컬럼에는
+-- 외래키 제약조건이 걸려있지 않음!!
+-- 그런데도 JOIN이 잘만되었음
+
+
+--> 서브쿼리의 SELECT 절에 연산식또는 함수식이 포함될 경우
+-- 반드시 별칭을 부여하고 넘어가야함
+
+* 테이블이 다 생성된 후 뒤늦게 제약조건을 추가하고자 한다면?
+    
+    ALTER TABLE 테이블명 XXXX(변경할내용);
+    
+    - PRIMARY KEY : ADD PRIMARY KEY(컬럼명);
+    - FOREIGN KEY : ADD FOREING KEY(컬럼명) REFERENCES 참조할부모테이블명(참조할컬럼명);
+    - UNIQUE : ADD UNIQUE(컬럼명);
+    - CHECK : ADD CHECK(컬럼에대한조건식);
+    - NOT NULL : MODIFY 컬럼명 NOT NULL;
+
+* SUBQUERY를 이용한 테이블 생성
+    
+    메인 SQL문 을 보조 역할 해주는 SELECT 문을 서브쿼리라 함!!
+    메인 SQL문의 종류는 SELECT 문 뿐만 아니라 CREATE 문도 될수 있음!!
+    
+    
+    [ 표현법 ]
+    CREATE TABLE 테이블명 
+        AS (서브쿼리);
+    
+    즉, 해당 서브쿼리를 수행한 결과를 통해
+    새로이 테이블을 생성하는 개념 (테이블 복사 개념)
